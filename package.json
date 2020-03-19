@@ -4,6 +4,7 @@
   "description": "mmap bindings for node.js that work",
   "main": "lib/mmap.js",
   "scripts": {
+    "build": "node-gyp rebuild",
     "test": "mocha -gc --reporter=spec test/**/*-test.js"
   },
   "repository": {

@@ -10,7 +10,7 @@
 namespace node {
 namespace node_mmap {
 
-using v8::Handle;
+// using v8::Handle;
 using v8::Local;
 using v8::Number;
 using v8::Object;
@@ -27,15 +27,19 @@ static void FreeCallback(char* data, void* hint) {
 static void DontFree(char* data, void* hint) {
 }
 
-
 NAN_METHOD(Alloc) {
   Nan::HandleScope scope;
 
-  int len = info[0]->Uint32Value();
-  int prot = info[1]->Uint32Value();
-  int flags = info[2]->Uint32Value();
-  int fd = info[3]->Int32Value();
-  int off = info[4]->Uint32Value();
+  int len = Nan::To<uint32_t>(info[0]).FromJust();
+  // int len = info[0]->Uint32Value(context);
+  int prot = Nan::To<uint32_t>(info[1]).FromJust();
+  // int prot = info[1]->Uint32Value(context);
+  int flags = Nan::To<uint32_t>(info[2]).FromJust();
+  // int flags = info[2]->Uint32Value(context);
+  int fd = Nan::To<int32_t>(info[3]).FromJust();
+  // int fd = info[3]->Int32Value(context);
+  int off = Nan::To<uint32_t>(info[4]).FromJust();
+  // int off = info[4]->Uint32Value(context);
 
   void* res = mmap(NULL, len, prot, flags, fd, off);
   if (res == MAP_FAILED)
@@ -52,12 +56,19 @@ NAN_METHOD(Alloc) {
 NAN_METHOD(AlignedAlloc) {
   Nan::HandleScope scope;
 
-  int len = info[0]->Uint32Value();
-  int prot = info[1]->Uint32Value();
-  int flags = info[2]->Uint32Value();
-  int fd = info[3]->Int32Value();
-  int off = info[4]->Uint32Value();
-  int align = info[5]->Uint32Value();
+
+  int len = Nan::To<uint32_t>(info[0]).FromJust();
+  // int len = info[0]->Uint32Value(context);
+  int prot = Nan::To<uint32_t>(info[1]).FromJust();
+  // int prot = info[1]->Uint32Value(context);
+  int flags = Nan::To<uint32_t>(info[2]).FromJust();
+  // int flags = info[2]->Uint32Value(context);
+  int fd = Nan::To<int32_t>(info[3]).FromJust();
+  // int fd = info[3]->Int32Value(context);
+  int off = Nan::To<uint32_t>(info[4]).FromJust();
+  // int off = info[4]->Uint32Value(context);  
+  int align = Nan::To<uint32_t>(info[5]).FromJust();
+  // int align = info[5]->Uint32Value(context);
 
   void* res = mmap(NULL, len + align, prot, flags, fd, off);
   if (res == MAP_FAILED)
@@ -87,13 +98,15 @@ NAN_METHOD(AlignedAlloc) {
 
 
 NAN_METHOD(Sync) {
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   Nan::HandleScope scope;
-  char* data = node::Buffer::Data(info[0]->ToObject());
-  size_t length =  node::Buffer::Length(info[0]->ToObject());
+  char* data = node::Buffer::Data(info[0]->ToObject(isolate));
+  size_t length =  node::Buffer::Length(info[0]->ToObject(isolate));
 
   if (info.Length() > 1) {
     // optional argument: offset
-    const size_t offset = info[1]->Uint32Value();
+    
+    const size_t offset = Nan::To<uint32_t>(info[1]).FromJust();;
     if (length <= offset) {
       return Nan::ThrowRangeError("Offset out of bounds");
     } else if (offset > 0 && (offset % sysconf(_SC_PAGE_SIZE))) {
@@ -106,7 +119,7 @@ NAN_METHOD(Sync) {
 
   if (info.Length() > 2) {
     // optional argument: length
-    const size_t range = info[2]->Uint32Value();
+    const size_t range = Nan::To<uint32_t>(info[2]).FromJust();;
     if (range < length) {
       length = range;
     }
@@ -115,7 +128,7 @@ NAN_METHOD(Sync) {
   int flags;
   if (info.Length() > 3) {
     // optional argument: flags
-    flags = info[3]->Uint32Value();
+    flags = Nan::To<uint32_t>(info[3]).FromJust();;
   } else {
     flags = MS_SYNC;
   }
@@ -128,7 +141,7 @@ NAN_METHOD(Sync) {
 }
 
 
-static void Init(Handle<Object> target) {
+static void Init(Local<Object> target) {
   Nan::SetMethod(target, "alloc", Alloc);
   Nan::SetMethod(target, "alignedAlloc", AlignedAlloc);
   Nan::SetMethod(target, "sync", Sync);
